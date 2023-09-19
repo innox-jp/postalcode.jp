@@ -1,0 +1,52 @@
+source: postcode is duckdb.table('data/utf_all.csv') {
+    rename: `全国地方公共団体コード` is column00      #`全国地方公共団体コード` 
+    rename: `（旧）郵便番号` is column01              #`(旧)郵便番号`
+    rename: `code` is column02                  #`郵便番号`
+    rename: `都道府県名カタカナ` is column03         #`都道府県名カタカナ`
+    rename: `市区町村名カタカナ` is column04         #`市区町村名カタカナ`
+    rename: `町域名カタカナ` is column05            #`町域名カタカナ`
+    rename: `prefecture_name` is column06              #`都道府県名`  
+    rename: `city_name` is column07                  #`市区町村名` 
+    rename: `town_area_name` is column08                   #`町域名`
+    rename: `一町域が二以上の郵便番号で表される場合` is column09     #`一町域が二以上の郵便番号で表される場合`
+    rename: `小字毎に番地が起番されている町域` is column10  #`小字毎に番地が起番されている町域`
+    rename: `一つの郵便番号で二以上の町域を表す場合` is column11 #`一つの郵便番号で二以上の町域を表す場合`
+    rename: `丁目を有する町域の場合` is column12 #`丁目を有する町域の場合`
+    rename: `更新の表示` is column13        #`更新の表示`
+    rename: `変更理由` is column14          #`変更理由`
+    
+    measure: postcode_count is count()
+    percent_of_postcode_count is postcode_count / all(postcode_count)
+    dimension: address is town_area_name ?
+            pick concat(prefecture_name, city_name) when '以下に掲載がない場合'// leave these alone
+            else concat(prefecture_name, city_name, replace(town_area_name, r'（.*）',''))
+    query: postcode is -> {
+        project: code,prefecture_name,city_name,town_area_name,address
+    }
+    
+    query: nai08 is -> {
+        project: *
+        where: town_area_name = '以下 に掲載がない場合'
+    }
+    query: not08 is -> {
+        project: *
+        where: town_area_name != '以下に掲載がない場合'
+    }
+
+    query: nopar is  {
+        project: *
+        where: town_area_name !~ r'.*（'
+    }
+
+
+    query: test is {
+        aggregate: postcode_count, percent_of_postcode_count
+    }
+
+
+    query: nai08_count is nai08 -> {
+        aggregate: postcode_count is count()
+    }
+
+
+}

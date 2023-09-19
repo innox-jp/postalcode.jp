@@ -1,0 +1,11 @@
+>>>malloy
+
+
+import "postcode.malloy"
+>>>sql
+-- connection: duckdb
+COPY (
+%{
+  postcode.postcode
+}%
+) TO 'postalcode.csv' (HEADER)
