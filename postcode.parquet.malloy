@@ -1,0 +1,43 @@
+source: postcode is duckdb.table('data/postalcode.parquet') {
+    
+    measure: postcode_count is count()
+    percent_of_postcode_count is postcode_count / all(postcode_count)
+
+    query: postcode is -> {
+        project: code,prefecture_name,city_name,town_area_name,address
+    }
+    
+    query: nai08 is -> {
+        project: *
+        where: town_area_name = '以下 に掲載がない場合'
+    }
+    query: not08 is -> {
+        project: *
+        where: town_area_name != '以下に掲載がない場合'
+    }
+
+    query: nopar is  {
+        project: *
+        where: town_area_name !~ r'.*（'
+    }
+
+
+    query: test is {
+        aggregate: postcode_count, percent_of_postcode_count
+    }
+
+
+    query: nai08_count is nai08 -> {
+        aggregate: postcode_count is count()
+    }
+
+    query: code_doubling is {
+        group_by: code
+        aggregate: postcode_count is count()
+        aggregate: a_count is count(distinct address)
+        nest: address is {
+            group_by: address    
+        }
+        having: postcode_count > 1 and a_count!=postcode_count
+    }
+}

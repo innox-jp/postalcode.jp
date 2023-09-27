@@ -48,5 +48,12 @@ source: postcode is duckdb.table('data/utf_all.csv') {
         aggregate: postcode_count is count()
     }
 
-
+    query: code_doubling is {
+        group_by: code
+        aggregate: postcode_count is count()
+        nest: address is {
+            group_by: address
+        }
+        having: postcode_count > 1
+    }
 }

@@ -6,6 +6,13 @@ import "postcode.malloy"
 -- connection: duckdb
 COPY (
 %{
+  postcode->postcode
+}%
+) TO 'data/postalcode.parquet'
+>>>sql
+-- connection: duckdb
+COPY (
+%{
   postcode.postcode
 }%
 ) TO 'postalcode.csv' (HEADER)
